@@ -111,7 +111,6 @@ def manhattan_distance_to_center_for_square(i):
     x, y = grid.head_cell.coords
     return abs(x) + abs(y)
 
-
 def test_manhattan_distance_to_center_for_square():
     assert manhattan_distance_to_center_for_square(0) == 0
     assert manhattan_distance_to_center_for_square(11) == 3
@@ -130,9 +129,9 @@ def test_sum_diagonals_for_square():
     assert grid.nth_cell(10).value == 54
 
 
-print(manhattan_distance_to_center_for_square(361527))
+print(f"Part one: {manhattan_distance_to_center_for_square(361527)}")
 
+print("Part two:")
 grid = Grid()
 grid.populate_until_value(361527)
 print(grid.head_cell.value)
-

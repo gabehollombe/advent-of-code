@@ -1,7 +1,5 @@
+from itertools import cycle, islice
 
-m itertools import cycle, islice
-
-import pytest
 
 def nth(iterable, n, default=None):
     "Returns the nth item or a default value"
