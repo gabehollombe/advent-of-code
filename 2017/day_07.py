@@ -1,25 +1,70 @@
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, Counter
+from copy import copy
+from functools import reduce
 from typing import List
 
 import pytest
 
 Report = namedtuple('Report', ['name', 'weight', 'names_of_children'])
-Program = namedtuple('Report', ['name', 'weight', 'children'])
+Program = namedtuple('Program', ['name', 'weight', 'children'])
+
 
 class Towers():
     def __init__(self, reports: List[Report]):
         self.roots = dict()
-        self.parents = dict() # Dict[str, Program]
+        self.parents = dict()
+        self.programs = dict()
         for report in reports:
-            program = Program(report.name, report.weight, {})
+            program = Program(report.name, report.weight, dict())
+            self.programs[program.name] = program
             if program.name in self.parents:
                 self.parents[program.name].children[program.name] = program
             else:
-                self.roots[report.name] = program
+                self.roots[program.name] = program
             for name in report.names_of_children:
                 self.parents[name] = program
                 if name in self.roots:
                     program.children[name] = self.roots.pop(name)
+
+    def recursive_weight(self, program):
+        return program.weight + self.weight_of_all_decendants(program)
+
+    def weight_of_all_decendants(self, program):
+        return sum([self.recursive_weight(c) for c in program.children.values()])
+
+    def find(self, name):
+        return self.programs[name]
+
+    def is_unbalanced(self, program):
+        return len(set([self.recursive_weight(p) for p in program.children.values()])) > 1
+
+    def find_deepest_unbalanced_node(self, node):
+        unbalanced_children = list(filter(lambda n: self.is_unbalanced(n), node.children.values()))
+        if len(unbalanced_children) == 0:
+            return node
+        else:
+            unbalanced_child = unbalanced_children[0]
+            return self.find_deepest_unbalanced_node(unbalanced_child)
+
+    def find_wrong_weight(self):
+        program = self.find_deepest_unbalanced_node(self.root)
+        children = program.children.values()
+        total_weights = set([self.recursive_weight(p) for p in children])
+        difference = abs(reduce(lambda diff, w: diff - w, total_weights))
+        adjustments = [difference, -difference]
+
+        for child in children:
+            for adjustment in adjustments:
+                program.children[child.name] = Program(child.name, child.weight + adjustment, child.children)
+                if not self.is_unbalanced(program):
+                    return child.name, child.weight + adjustment
+                else:
+                    program.children[child.name] = child
+
+
+    @property
+    def root(self) -> Program:
+        return list(self.roots.values())[0]
 
 
 def find_root_name(reports):
@@ -66,12 +111,12 @@ def test_parse_lines():
         Report('ebii', 61, set()),
         Report('havc', 66, set()),
         Report('ktlj', 57, set()),
-        Report('fwft', 72, set(['ktlj', 'cntj', 'xhth'])),
+        Report('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
         Report('qoyq', 66, set()),
-        Report('padx', 45, set(['pbga', 'havc', 'qoyq'])),
-        Report('tknk', 41, set(['ugml', 'padx', 'fwft'])),
+        Report('padx', 45, {'pbga', 'havc', 'qoyq'}),
+        Report('tknk', 41, {'ugml', 'padx', 'fwft'}),
         Report('jptl', 61, set()),
-        Report('ugml', 68, set(['gyxo', 'ebii', 'jptl'])),
+        Report('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
         Report('gyxo', 61, set()),
         Report('cntj', 57, set()),
     ]
@@ -85,12 +130,12 @@ def test_find_root():
         Report('ebii', 61, set()),
         Report('havc', 66, set()),
         Report('ktlj', 57, set()),
-        Report('fwft', 72, set(['ktlj', 'cntj', 'xhth'])),
+        Report('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
         Report('qoyq', 66, set()),
-        Report('padx', 45, set(['pbga', 'havc', 'qoyq'])),
-        Report('tknk', 41, set(['ugml', 'padx', 'fwft'])),
+        Report('padx', 45, {'pbga', 'havc', 'qoyq'}),
+        Report('tknk', 41, {'ugml', 'padx', 'fwft'}),
         Report('jptl', 61, set()),
-        Report('ugml', 68, set(['gyxo', 'ebii', 'jptl'])),
+        Report('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
         Report('gyxo', 61, set()),
         Report('cntj', 57, set()),
     ]
@@ -103,18 +148,57 @@ def test_towers():
         Report('a', 3, ['b', 'c']),
         Report('c', 2, []),
     ]
-
     towers = Towers(reports)
+
     assert len(towers.roots) == 1
     assert 'b' in towers.roots['a'].children
     assert 'c' in towers.roots['a'].children
     assert towers.roots['a'].children['b'] == Program('b', 1, {})
     assert towers.roots['a'].children['c'] == Program('c', 2, {})
 
+def test_find():
+    reports = [
+        Report('b', 1, []),
+        Report('a', 3, ['b', 'c']),
+        Report('c', 2, []),
+    ]
+    towers = Towers(reports)
+    assert towers.find('a') == Program(
+        'a', 3, dict(
+            b=Program('b', 1, dict()),
+            c=Program('c', 2, dict()),
+        )
+    )
+
+
+def test_find_wrong_weight():
+    reports = [
+        Report('pbga', 66, set()),
+        Report('xhth', 57, set()),
+        Report('ebii', 61, set()),
+        Report('havc', 66, set()),
+        Report('ktlj', 57, set()),
+        Report('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
+        Report('qoyq', 66, set()),
+        Report('padx', 45, {'pbga', 'havc', 'qoyq'}),
+        Report('tknk', 41, {'ugml', 'padx', 'fwft'}),
+        Report('jptl', 61, set()),
+        Report('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
+        Report('gyxo', 61, set()),
+        Report('cntj', 57, set()),
+    ]
+    towers = Towers(reports)
+
+    assert towers.is_unbalanced(towers.find('tknk'))
+    assert not towers.is_unbalanced(towers.find('padx'))
+
+
+
 
 lines = open("inputs/day_07_input.txt").read().splitlines()
 reports = parse_lines(lines)
+towers = Towers(reports)
 print(f"Part one: {find_root_name(reports)}")
+print(f"Part two: {towers.find_wrong_weight()}")
 
-#pytest.main(f"-v --tb=short {__file__}")
-#pytest.main(__file__)
+# pytest.main([__file__])
