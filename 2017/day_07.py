@@ -4,7 +4,25 @@ from typing import List
 import pytest
 
 Report = namedtuple('Report', ['name', 'weight', 'names_of_children'])
-Program = namedtuple('Program', ['name', 'weight', 'children'])
+
+class Program():
+    def __init__(self, name, weight, names_of_children=None):
+        self.name = name
+        self.weight = weight
+        self.names_of_children = names_of_children or []
+        self.children = []
+
+    def add_child(self, child):
+        self.children.append(child)
+
+    def __eq__(self, other):
+        return (
+                self.name == other.name
+                and
+                self.weight == other.weight
+                and
+                self.names_of_children == other.names_of_children
+        )
 
 
 class Towers():
@@ -17,11 +35,11 @@ class Towers():
 
         # Update children name references into actual programs
         for program in self.programs.values():
-            for child_name in program.children.keys():
-                program.children[child_name] = self.programs[child_name]
+            for child_name in program.names_of_children:
+                program.add_child(self.programs[child_name])
 
         # Figure out which node(s) are root nodes
-        child_names = set([c.name for p in self.programs.values() for c in p.children.values()])
+        child_names = set([name for p in self.programs.values() for name in p.names_of_children])
         all_names = set(self.programs.keys())
         self.roots = {name: self.programs[name] for name in (all_names - child_names)}
 
@@ -29,16 +47,16 @@ class Towers():
         return program.weight + self.weight_of_all_decendants(program)
 
     def weight_of_all_decendants(self, program):
-        return sum([self.recursive_weight(c) for c in program.children.values()])
+        return sum([self.recursive_weight(c) for c in program.children])
 
     def find(self, name):
         return self.programs[name]
 
     def is_unbalanced(self, program):
-        return len(set([self.recursive_weight(p) for p in program.children.values()])) > 1
+        return len(set([self.recursive_weight(p) for p in program.children])) > 1
 
     def find_deepest_unbalanced_node(self, node):
-        unbalanced_children = list(filter(lambda n: self.is_unbalanced(n), node.children.values()))
+        unbalanced_children = list(filter(lambda n: self.is_unbalanced(n), node.children))
         if len(unbalanced_children) == 0:
             return node
         else:
@@ -47,18 +65,20 @@ class Towers():
 
     def find_wrong_weight(self):
         program = self.find_deepest_unbalanced_node(self.root)
-        children = program.children.values()
+        children = program.children
         total_weights = set([self.recursive_weight(p) for p in children])
         difference = abs(reduce(lambda diff, w: diff - w, total_weights))
         adjustments = [difference, -difference]
 
         for child in children:
             for adjustment in adjustments:
-                program.children[child.name] = Program(child.name, child.weight + adjustment, child.children)
+                original_weight = child.weight
+                adjusted_weight = original_weight + adjustment
+                self.programs[child.name].weight = adjusted_weight
                 if not self.is_unbalanced(program):
-                    return child.name, child.weight + adjustment
+                    return child.name, child.weight
                 else:
-                    program.children[child.name] = child
+                    self.programs[child.name].weight = original_weight
 
 
     @property
@@ -150,24 +170,10 @@ def test_towers():
     towers = Towers(reports)
 
     assert len(towers.roots) == 1
-    assert 'b' in towers.roots['a'].children
-    assert 'c' in towers.roots['a'].children
-    assert towers.roots['a'].children['b'] == Program('b', 1, {})
-    assert towers.roots['a'].children['c'] == Program('c', 2, {})
-
-def test_find():
-    reports = [
-        Report('b', 1, []),
-        Report('a', 3, ['b', 'c']),
-        Report('c', 2, []),
-    ]
-    towers = Towers(reports)
-    assert towers.find('a') == Program(
-        'a', 3, dict(
-            b=Program('b', 1, dict()),
-            c=Program('c', 2, dict()),
-        )
-    )
+    assert 'b' in towers.roots['a'].names_of_children
+    assert 'c' in towers.roots['a'].names_of_children
+    assert Program('b', 1) in towers.roots['a'].children
+    assert Program('c', 2) in towers.roots['a'].children
 
 
 def test_find_wrong_weight():
