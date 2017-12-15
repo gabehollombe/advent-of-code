@@ -1,8 +1,6 @@
-from collections import defaultdict, namedtuple, Counter
-from copy import copy
+from collections import namedtuple
 from functools import reduce
 from typing import List
-
 import pytest
 
 Report = namedtuple('Report', ['name', 'weight', 'names_of_children'])
@@ -11,20 +9,21 @@ Program = namedtuple('Program', ['name', 'weight', 'children'])
 
 class Towers():
     def __init__(self, reports: List[Report]):
-        self.roots = dict()
-        self.parents = dict()
         self.programs = dict()
+        # Build programs and track names of children
         for report in reports:
-            program = Program(report.name, report.weight, dict())
+            program = Program(report.name, report.weight, {child_name: None for child_name in report.names_of_children})
             self.programs[program.name] = program
-            if program.name in self.parents:
-                self.parents[program.name].children[program.name] = program
-            else:
-                self.roots[program.name] = program
-            for name in report.names_of_children:
-                self.parents[name] = program
-                if name in self.roots:
-                    program.children[name] = self.roots.pop(name)
+
+        # Update children name references into actual programs
+        for program in self.programs.values():
+            for child_name in program.children.keys():
+                program.children[child_name] = self.programs[child_name]
+
+        # Figure out which node(s) are root nodes
+        child_names = set([c.name for p in self.programs.values() for c in p.children.values()])
+        all_names = set(self.programs.keys())
+        self.roots = {name: self.programs[name] for name in (all_names - child_names)}
 
     def recursive_weight(self, program):
         return program.weight + self.weight_of_all_decendants(program)
@@ -201,4 +200,4 @@ towers = Towers(reports)
 print(f"Part one: {find_root_name(reports)}")
 print(f"Part two: {towers.find_wrong_weight()}")
 
-# pytest.main([__file__])
+pytest.main([__file__])
