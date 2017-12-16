@@ -1,15 +1,14 @@
 from collections import namedtuple
+from copy import copy
 from functools import reduce
 from typing import List
 import pytest
-
-Report = namedtuple('Report', ['name', 'weight', 'names_of_children'])
 
 class Program():
     def __init__(self, name, weight, names_of_children=None):
         self.name = name
         self.weight = weight
-        self.names_of_children = names_of_children or []
+        self.names_of_children = names_of_children or set()
         self.children = []
 
     def add_child(self, child):
@@ -26,12 +25,13 @@ class Program():
 
 
 class Towers():
-    def __init__(self, reports: List[Report]):
+    def __init__(self, programs: List[Program]):
         self.programs = dict()
+
         # Build programs and track names of children
-        for report in reports:
-            program = Program(report.name, report.weight, {child_name: None for child_name in report.names_of_children})
-            self.programs[program.name] = program
+        for p in programs:
+            program = Program(p.name, p.weight, p.names_of_children)
+            self.programs[p.name] = program
 
         # Update children name references into actual programs
         for program in self.programs.values():
@@ -106,7 +106,7 @@ def parse_lines(lines):
         weight = weight.replace('(', '')
         weight = weight.replace(')', '')
         weight = int(weight)
-        reports.append(Report(name, weight, children))
+        reports.append(Program(name, weight, children))
     return reports
 
 
@@ -125,47 +125,47 @@ def test_parse_lines():
     gyxo (61)
     cntj (57)"""
     expected_parsed = [
-        Report('pbga', 66, set()),
-        Report('xhth', 57, set()),
-        Report('ebii', 61, set()),
-        Report('havc', 66, set()),
-        Report('ktlj', 57, set()),
-        Report('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
-        Report('qoyq', 66, set()),
-        Report('padx', 45, {'pbga', 'havc', 'qoyq'}),
-        Report('tknk', 41, {'ugml', 'padx', 'fwft'}),
-        Report('jptl', 61, set()),
-        Report('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
-        Report('gyxo', 61, set()),
-        Report('cntj', 57, set()),
+        Program('pbga', 66, set()),
+        Program('xhth', 57, set()),
+        Program('ebii', 61, set()),
+        Program('havc', 66, set()),
+        Program('ktlj', 57, set()),
+        Program('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
+        Program('qoyq', 66, set()),
+        Program('padx', 45, {'pbga', 'havc', 'qoyq'}),
+        Program('tknk', 41, {'ugml', 'padx', 'fwft'}),
+        Program('jptl', 61, set()),
+        Program('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
+        Program('gyxo', 61, set()),
+        Program('cntj', 57, set()),
     ]
     assert parse_lines(input.splitlines()) == expected_parsed
 
 
 def test_find_root():
     reports = [
-        Report('pbga', 66, set()),
-        Report('xhth', 57, set()),
-        Report('ebii', 61, set()),
-        Report('havc', 66, set()),
-        Report('ktlj', 57, set()),
-        Report('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
-        Report('qoyq', 66, set()),
-        Report('padx', 45, {'pbga', 'havc', 'qoyq'}),
-        Report('tknk', 41, {'ugml', 'padx', 'fwft'}),
-        Report('jptl', 61, set()),
-        Report('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
-        Report('gyxo', 61, set()),
-        Report('cntj', 57, set()),
+        Program('pbga', 66, set()),
+        Program('xhth', 57, set()),
+        Program('ebii', 61, set()),
+        Program('havc', 66, set()),
+        Program('ktlj', 57, set()),
+        Program('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
+        Program('qoyq', 66, set()),
+        Program('padx', 45, {'pbga', 'havc', 'qoyq'}),
+        Program('tknk', 41, {'ugml', 'padx', 'fwft'}),
+        Program('jptl', 61, set()),
+        Program('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
+        Program('gyxo', 61, set()),
+        Program('cntj', 57, set()),
     ]
     assert find_root_name(reports) == 'tknk'
 
 
 def test_towers():
     reports = [
-        Report('b', 1, []),
-        Report('a', 3, ['b', 'c']),
-        Report('c', 2, []),
+        Program('b', 1, []),
+        Program('a', 3, ['b', 'c']),
+        Program('c', 2, []),
     ]
     towers = Towers(reports)
 
@@ -177,22 +177,22 @@ def test_towers():
 
 
 def test_find_wrong_weight():
-    reports = [
-        Report('pbga', 66, set()),
-        Report('xhth', 57, set()),
-        Report('ebii', 61, set()),
-        Report('havc', 66, set()),
-        Report('ktlj', 57, set()),
-        Report('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
-        Report('qoyq', 66, set()),
-        Report('padx', 45, {'pbga', 'havc', 'qoyq'}),
-        Report('tknk', 41, {'ugml', 'padx', 'fwft'}),
-        Report('jptl', 61, set()),
-        Report('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
-        Report('gyxo', 61, set()),
-        Report('cntj', 57, set()),
+    programs = [
+        Program('pbga', 66, set()),
+        Program('xhth', 57, set()),
+        Program('ebii', 61, set()),
+        Program('havc', 66, set()),
+        Program('ktlj', 57, set()),
+        Program('fwft', 72, {'ktlj', 'cntj', 'xhth'}),
+        Program('qoyq', 66, set()),
+        Program('padx', 45, {'pbga', 'havc', 'qoyq'}),
+        Program('tknk', 41, {'ugml', 'padx', 'fwft'}),
+        Program('jptl', 61, set()),
+        Program('ugml', 68, {'gyxo', 'ebii', 'jptl'}),
+        Program('gyxo', 61, set()),
+        Program('cntj', 57, set()),
     ]
-    towers = Towers(reports)
+    towers = Towers(programs)
 
     assert towers.is_unbalanced(towers.find('tknk'))
     assert not towers.is_unbalanced(towers.find('padx'))
@@ -201,9 +201,9 @@ def test_find_wrong_weight():
 
 
 lines = open("inputs/day_07_input.txt").read().splitlines()
-reports = parse_lines(lines)
-towers = Towers(reports)
-print(f"Part one: {find_root_name(reports)}")
+programs = parse_lines(lines)
+towers = Towers(programs)
+print(f"Part one: {find_root_name(programs)}")
 print(f"Part two: {towers.find_wrong_weight()}")
 
 pytest.main([__file__])
