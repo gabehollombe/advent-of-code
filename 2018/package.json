@@ -1,0 +1,26 @@
+{
+  "name": "ts_test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "ts-node node_modules/.bin/jasmine JASMINE_CONFIG_PATH=jasmine.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jasmine": "^3.3.2",
+    "@types/node": "^10.12.15",
+    "@types/ramda": "github:types/npm-ramda#dist",
+    "jasmine": "^3.3.1",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.2.2"
+  },
+  "dependencies": {
+    "ramda": "^0.26.1"
+  }
+}
