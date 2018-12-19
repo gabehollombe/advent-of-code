@@ -11,3 +11,4 @@ for (let line of lines) {
 }
 
 console.log('Part one: ', fabric.overlapCount())
+console.log('Part two: ', fabric.nonOverlappingClaims().values().next().value)

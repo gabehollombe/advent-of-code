@@ -7,7 +7,12 @@ export class Coordinate {
     }
 
     toString() {
-        return `Coordinate(${this.x},${this.y})`;
+        return `${this.x},${this.y}`;
+    }
+
+    static fromString(str: string) {
+        const [x,y] = str.split(',')
+        return new Coordinate(parseInt(x, 10), parseInt(y, 10))
     }
 }
 
@@ -22,6 +27,14 @@ export class Claim {
         this.coordinate = new Coordinate(x, y)
         this.width = width
         this.height = height
+    }
+
+    containsCoordinate(coordinate: Coordinate): boolean {
+        if (coordinate.x < this.coordinate.x) return false;
+        if (coordinate.y < this.coordinate.y) return false;
+        if (coordinate.x >= this.coordinate.x + this.width) return false;
+        if (coordinate.y >= this.coordinate.y + this.height) return false;
+        return true;
     }
 
     static fromString(string: string) : Claim {
@@ -47,19 +60,44 @@ function frequencies<T>(list: T[]) : Object {
 
 export class Fabric {
     private claimedCoordinates: Coordinate[];
+    private claims: Claim[];
     
     constructor() { 
+        this.claims = new Array<Claim>();
         this.claimedCoordinates = new Array<Coordinate>();
     }
 
     overlapCount(): any {
-        return Object.entries(frequencies(this.claimedCoordinates))
-            .map(([_, count]) => count)
-            .filter(c => c > 1)
-            .length;
+        return this.overlappingCoordinates().length;
+    }
+
+    private overlappingCoordinates() {
+        let freqs = frequencies(this.claimedCoordinates) 
+        let overlappingCoordCounts = Object.entries(freqs).filter(([_, count]) => count > 1)
+        return overlappingCoordCounts.map(cs => cs[0]);
+    }
+
+    private overlappingClaims(): Set<Claim> {
+        let claims = new Set<Claim>();
+        for (let coordStr of this.overlappingCoordinates()) {
+            for (let claim of this.claims.filter(claim => claim.containsCoordinate(Coordinate.fromString(coordStr)))) {
+                claims.add(claim);
+            }
+        }
+        return claims
+    }
+
+    nonOverlappingClaims(): Set<Claim> {
+        const overlappingClaims = this.overlappingClaims()
+        this.claims.filter(c => !overlappingClaims.has(c))
+        return new Set(
+            this.claims.filter(c => !overlappingClaims.has(c))
+        )
     }
 
     addClaim(claim: Claim) : void {
+        this.claims.push(claim);
+
         let x = claim.coordinate.x;
         let y = claim.coordinate.y;
         let coordinates = Array<Coordinate>();
