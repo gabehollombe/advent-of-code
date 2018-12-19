@@ -23,6 +23,14 @@ export class Claim {
         this.width = width
         this.height = height
     }
+
+    static fromString(string: string) : Claim {
+        const parts = string.split(' ')
+        const id = parseInt(parts[0].split('#')[1], 10);
+        const [x, y] = parts[2].split(':')[0].split(',')
+        const [width, height] = parts[3].split('x')
+        return new Claim(id, [parseInt(x, 10), parseInt(y, 10)], [parseInt(width, 10), parseInt(height, 10)])
+    }
 }
 
 function frequencies<T>(list: T[]) : Object {
@@ -51,18 +59,20 @@ export class Fabric {
             .length;
     }
 
-    claim(claimTopLeft: Coordinate, [width, height]) : void {
-        let x = claimTopLeft.x;
-        let y = claimTopLeft.y;
+    addClaim(claim: Claim) : void {
+        let x = claim.coordinate.x;
+        let y = claim.coordinate.y;
         let coordinates = Array<Coordinate>();
-        while(x < claimTopLeft.x + width) {
-            while(y < claimTopLeft.y + height) {
+
+        while(x < claim.coordinate.x + claim.width) {
+            while(y < claim.coordinate.y + claim.height) {
                 coordinates.push(new Coordinate(x, y));
                 y += 1;
             }
-            y = claimTopLeft.y;
+            y = claim.coordinate.y;
             x += 1;
         }
+
         this.claimedCoordinates = this.claimedCoordinates.concat(coordinates);
     }
 }
