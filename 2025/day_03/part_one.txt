@@ -1,0 +1,39 @@
+I want to write a program using Golang to solve a programming challenge. Here is the challenge prompt
+
+<challenge_prompt>
+We have a collection of batteries.
+
+The batteries are each labeled with their "joltage" rating, a value from 1 to 9. For example each of the following lines is a line for the puzzle input:
+
+987654321111111
+811111111111119
+234234234234278
+818181911112111
+
+The batteries are arranged into banks; each line of digits in your input corresponds to a single bank of batteries. Within each bank, you need to turn on exactly two batteries; the joltage that the bank produces is equal to the number formed by the digits on the batteries you've turned on. For example, if you have a bank like 12345 and you turn on batteries 2 and 4, the bank would produce 24 jolts. (You cannot rearrange batteries.)
+
+You'll need to find the largest possible joltage each bank can produce. In the above example:
+
+In 987654321111111, you can make the largest joltage possible, 98, by turning on the first two batteries.
+In 811111111111119, you can make the largest joltage possible by turning on the batteries labeled 8 and 9, producing 89 jolts.
+In 234234234234278, you can make 78 by turning on the last two batteries (marked 7 and 8).
+In 818181911112111, the largest joltage you can produce is 92.
+
+The total output joltage is the sum of the maximum joltage from each bank, so in this example, the total output joltage is 98 + 89 + 78 + 92 = 357.
+</challenge_prompt>
+
+I want to use Golang to solve this, and I want your help to write some automated tests based on my pseudo code below. DO NOT write any implementation code beyond structs and function stubs needed to get all of the tests running and failing. 
+
+I will write all the implementation code.
+
+// parse input into a list containing BatteryBank type
+// each BatteryBank type has list of Int32 representing the banks of the battery
+banks = parseInput('./input.txt')
+
+bestJoltagesPerBank = []
+for each bank in banks:
+    bestJoltagesPerBank.append(getBestJoltage(bank))
+
+print("Sum of best joltages: ", sum(bestJoltagesPerBank))
+
+Create files inside the `day_03` folder.  You can see `day_01` folder contents for example pattern to follow in code organization.

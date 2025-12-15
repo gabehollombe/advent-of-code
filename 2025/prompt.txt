@@ -1,0 +1,4 @@
+I want to write a program using Golang to solve a programming challenge.
+
+I'm a fan of TDD so I need your help writing test cases for my pseudo code.
+
