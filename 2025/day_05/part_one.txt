@@ -1,0 +1,65 @@
+I want to write a program using Golang to solve a programming challenge. Here is the challenge prompt:
+
+<challenge_prompt>
+We have a simple text file (problem input) that represents a database of ingredient IDs.
+
+The database operates on ingredient IDs. It consists of a list of fresh ingredient ID ranges, a blank line, and a list of available ingredient IDs. For example:
+
+<example_input>
+3-5
+10-14
+16-20
+12-18
+
+1
+5
+8
+11
+17
+32
+</example_input>
+
+The fresh ID ranges are inclusive: the range 3-5 means that ingredient IDs 3, 4, and 5 are all fresh. The ranges can also overlap; an ingredient ID is fresh if it is in any range.
+
+The Elves are trying to determine which of the available ingredient IDs are fresh. In this example, this is done as follows:
+
+Ingredient ID 1 is spoiled because it does not fall into any range.
+Ingredient ID 5 is fresh because it falls into range 3-5.
+Ingredient ID 8 is spoiled.
+Ingredient ID 11 is fresh because it falls into range 10-14.
+Ingredient ID 17 is fresh because it falls into range 16-20 as well as range 12-18.
+Ingredient ID 32 is spoiled.
+
+So, in this example, 3 of the available ingredient IDs are fresh.
+</challenge_prompt>
+
+I want to use Golang to solve this, and I want your help to write some automated tests based on my pseudo code below. DO NOT write any implementation code beyond structs and function stubs needed to get all of the tests running and failing.  Only write test cases based on the example challenge prompt input above.
+
+I will write all the implementation code.
+
+--------
+Psuedo code:
+
+FreshRange struct {
+    start: int
+    end: int
+}
+
+Database struct {
+    ranges: []FreshRange
+    available: []int
+    func isFresh(id int) bool
+}
+
+//Parse input into a Database struct.
+database = parseInput('./input.txt')
+
+countFresh = 0
+for each id in database.available:
+    if database.isFresh(id):
+        countFresh++
+
+print("Number of fresh ingredients: ", countFresh)
+--------
+
+Create files inside the `day_05` folder.  You can see `day_01` folder contents for example pattern to follow in code organization.
